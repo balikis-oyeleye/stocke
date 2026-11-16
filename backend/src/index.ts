@@ -2,6 +2,7 @@ import express from "express";
 import helmet from "helmet";
 import cors from "cors";
 import env from "./configs/env";
+import connectDB from "./configs/db";
 
 const app = express();
 
@@ -27,4 +28,5 @@ app.get("/", (req, res) => {
 
 app.listen(env.PORT, () => {
   console.log(`Server is running on port ${env.PORT}`);
+  void connectDB();
 });
