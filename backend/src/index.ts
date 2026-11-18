@@ -34,7 +34,17 @@ setupRoutes(app);
 // Global error handler
 app.use(errorHandler);
 
-app.listen(env.PORT, () => {
-  console.log(`Server is running on port ${env.PORT}`);
-  void connectDB();
-});
+const startServer = async () => {
+  try {
+    await connectDB();
+
+    app.listen(env.PORT, () => {
+      console.log(`Server is running on port ${env.PORT}`);
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exitCode = 1;
+  }
+};
+
+void startServer();
