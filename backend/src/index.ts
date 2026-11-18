@@ -3,6 +3,8 @@ import helmet from "helmet";
 import cors from "cors";
 import env from "./configs/env";
 import connectDB from "./configs/db";
+import { setupRoutes } from "./modules/startup";
+import { errorHandler } from "./middlewares/error-handler";
 
 const app = express();
 
@@ -22,9 +24,15 @@ app.use(
   }),
 );
 
-app.get("/", (req, res) => {
-  res.send("Hello, World!");
+app.get("/health", (req, res) => {
+  res.send("API working fine");
 });
+
+// Routes Configuration
+setupRoutes(app);
+
+// Global error handler
+app.use(errorHandler);
 
 app.listen(env.PORT, () => {
   console.log(`Server is running on port ${env.PORT}`);
