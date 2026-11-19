@@ -56,7 +56,7 @@ export const register = async (req: Request, res: Response) => {
     true,
     HTTP_STATUS_CODE.CREATED,
     "User Created Successfully",
-    { data },
+    { data: { ...data, otp } },
   );
 };
 
