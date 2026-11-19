@@ -5,6 +5,7 @@ import env from "./configs/env";
 import connectDB from "./configs/db";
 import { setupRoutes } from "./modules/startup";
 import { errorHandler } from "./middlewares/error-handler";
+import { notFoundHandler } from "./middlewares/not-found";
 
 const app = express();
 
@@ -30,6 +31,9 @@ app.get("/api/v1/health", (_req, res) => {
 
 // Routes Configuration
 setupRoutes(app);
+
+// Handle 404 Not Found
+app.use(notFoundHandler);
 
 // Global error handler
 app.use(errorHandler);
