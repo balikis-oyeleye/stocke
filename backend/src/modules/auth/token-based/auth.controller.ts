@@ -2,9 +2,11 @@ import { Response, Request } from "express";
 import { registerSchema } from "./auth.schema";
 import { HTTP_STATUS_CODE } from "../../../utils/http-status-code";
 import { User } from "../../user/user.model";
-import { hashPassword } from "./auth.service";
+import { generateVerificationOTP, hashPassword } from "./auth.service";
 import { responseHandler } from "../../../helpers/response-handler";
 import { validationErrorHandler } from "../../../helpers/validation";
+import { sendEmail } from "../../../service/email.service";
+import { verificationEmailTemplate } from "../../../templates/verification-email";
 
 export const register = async (req: Request, res: Response) => {
   const rawData = registerSchema.safeParse(req.body);
@@ -25,6 +27,8 @@ export const register = async (req: Request, res: Response) => {
     );
   }
 
+  const otp = generateVerificationOTP();
+
   const data = {
     first_name: userData.first_name,
     last_name: userData.last_name,
@@ -35,9 +39,17 @@ export const register = async (req: Request, res: Response) => {
   const newUser = new User({
     ...data,
     password_hash: await hashPassword(userData.password),
+    verificationOtpHash: await hashPassword(otp),
+    verificationOtpExpiry: new Date(Date.now() + 10 * 60 * 1000),
   });
 
   await newUser.save();
+
+  await sendEmail({
+    to: data.email,
+    subject: "Verify your Stocke email address",
+    html: verificationEmailTemplate(data.first_name, otp),
+  });
 
   return responseHandler(
     res,
