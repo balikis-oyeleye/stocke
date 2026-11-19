@@ -1,8 +1,13 @@
 import { Response, Request } from "express";
-import { registerSchema } from "./auth.schema";
+import { registerSchema, verifyEmailSchema } from "./auth.schema";
 import { HTTP_STATUS_CODE } from "../../../utils/http-status-code";
 import { User } from "../../user/user.model";
-import { generateVerificationOTP, hashPassword } from "./auth.service";
+import {
+  comparePassword,
+  generateVerificationOTP,
+  hasExpired,
+  hashPassword,
+} from "./auth.service";
 import { responseHandler } from "../../../helpers/response-handler";
 import { validationErrorHandler } from "../../../helpers/validation";
 import { sendEmail } from "../../../service/email.service";
@@ -60,6 +65,66 @@ export const register = async (req: Request, res: Response) => {
   );
 };
 
-export const verifyEmail = async (req: Request, res: Response) => {};
+export const verifyEmail = async (req: Request, res: Response) => {
+  const rawData = verifyEmailSchema.safeParse(req.body);
+
+  if (!rawData.success) {
+    return validationErrorHandler(res, rawData.error);
+  }
+
+  const { otp, email } = rawData.data;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    return responseHandler(
+      res,
+      false,
+      HTTP_STATUS_CODE.BAD_REQUEST,
+      "Invalid or expired verification code",
+    );
+  }
+
+  if (user.email_verified) {
+    return responseHandler(
+      res,
+      false,
+      HTTP_STATUS_CODE.BAD_REQUEST,
+      "Email already verified",
+    );
+  }
+
+  if (hasExpired(user.verificationOtpExpiry)) {
+    return responseHandler(
+      res,
+      false,
+      HTTP_STATUS_CODE.BAD_REQUEST,
+      "Verification code has expired",
+    );
+  }
+
+  const isOTPMatch = await comparePassword(otp, user.verificationOtpHash);
+
+  if (!isOTPMatch) {
+    return responseHandler(
+      res,
+      false,
+      HTTP_STATUS_CODE.BAD_REQUEST,
+      "Invalid verification code",
+    );
+  }
+
+  user.email_verified = true;
+  user.verificationOtpHash = undefined;
+  user.verificationOtpExpiry = undefined;
+
+  await user.save();
+
+  return responseHandler(
+    res,
+    true,
+    HTTP_STATUS_CODE.OK,
+    "Email verified successfully",
+  );
+};
 
 export const login = async (req: Request, res: Response) => {};

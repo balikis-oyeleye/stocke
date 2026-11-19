@@ -23,4 +23,7 @@ export const registerSchema = z.object({
   role: z.enum(["Seller", "Customer"]).default("Customer"),
 });
 
-export type RegisterInput = z.infer<typeof registerSchema>;
+export const verifyEmailSchema = z.object({
+  otp: z.string().length(6, "OTP must be 6 characters"),
+  email: z.email("Please enter a valid email address").trim().toLowerCase(),
+});
