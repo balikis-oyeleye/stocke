@@ -24,7 +24,7 @@ app.use(
   }),
 );
 
-app.get("/health", (req, res) => {
+app.get("/api/v1/health", (_req, res) => {
   res.send("API working fine");
 });
 
