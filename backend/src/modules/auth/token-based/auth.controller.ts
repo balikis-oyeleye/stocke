@@ -3,8 +3,8 @@ import { registerSchema } from "./auth.schema";
 import { HTTP_STATUS_CODE } from "../../../utils/http-status-code";
 import { User } from "../../user/user.model";
 import { hashPassword } from "./auth.service";
-import { responseHandler } from "../../helpers/response-handler";
-import { validationErrorHandler } from "../../helpers/validation";
+import { responseHandler } from "../../../helpers/response-handler";
+import { validationErrorHandler } from "../../../helpers/validation";
 
 export const register = async (req: Request, res: Response) => {
   const rawData = registerSchema.safeParse(req.body);

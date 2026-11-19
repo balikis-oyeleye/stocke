@@ -1,7 +1,7 @@
 import { Response } from "express";
 import { z } from "zod";
 import { responseHandler } from "./response-handler";
-import { HTTP_STATUS_CODE } from "../../utils/http-status-code";
+import { HTTP_STATUS_CODE } from "../utils/http-status-code";
 
 export const validationErrorHandler = (res: Response, error: z.ZodError) => {
   return responseHandler(

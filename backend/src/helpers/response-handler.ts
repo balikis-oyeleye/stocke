@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { HTTP_STATUS_CODE } from "../../utils/http-status-code";
+import { HTTP_STATUS_CODE } from "../utils/http-status-code";
 
 interface ResponsePayload {
   data?: unknown;
