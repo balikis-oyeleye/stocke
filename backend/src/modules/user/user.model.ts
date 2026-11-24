@@ -43,6 +43,13 @@ const userSchema = new mongoose.Schema(
     verificationOtpExpiry: {
       type: Date,
     },
+    passwordOtpHash: {
+      type: String,
+      trim: true,
+    },
+    passwordOtpExpiry: {
+      type: Date,
+    },
   },
   {
     timestamps: true,

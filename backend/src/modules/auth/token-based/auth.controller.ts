@@ -222,8 +222,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
   const otp = generateVerificationOTP();
 
-  userData.verificationOtpHash = await hashPassword(otp);
-  userData.verificationOtpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+  userData.passwordOtpHash = await hashPassword(otp);
+  userData.passwordOtpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
   await userData.save();
 
