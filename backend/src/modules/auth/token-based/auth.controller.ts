@@ -3,6 +3,7 @@ import {
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
+  resetPasswordSchema,
   verifyEmailSchema,
 } from "./auth.schema";
 import { HTTP_STATUS_CODE } from "../../../utils/http-status-code";
@@ -144,13 +145,10 @@ export const login = async (req: Request, res: Response) => {
 
   const { email, password } = rawData.data;
 
-  const userData = await User.findOne({ email });
-  const isPasswordValid = await comparePassword(
-    password,
-    userData?.password_hash,
-  );
+  const user = await User.findOne({ email });
+  const isPasswordValid = await comparePassword(password, user?.password_hash);
 
-  if (!userData || !isPasswordValid) {
+  if (!user || !isPasswordValid) {
     return responseHandler(
       res,
       false,
@@ -159,7 +157,7 @@ export const login = async (req: Request, res: Response) => {
     );
   }
 
-  if (!userData.email_verified) {
+  if (!user.email_verified) {
     return responseHandler(
       res,
       false,
@@ -169,25 +167,25 @@ export const login = async (req: Request, res: Response) => {
   }
 
   const refreshToken = createToken(
-    userData._id.toString(),
-    userData.email,
-    userData.role,
+    user._id.toString(),
+    user.email,
+    user.role,
     env.JWT_REFRESH_TOKEN_SECRET,
     "7d",
   );
   const accessToken = createToken(
-    userData._id.toString(),
-    userData.email,
-    userData.role,
+    user._id.toString(),
+    user.email,
+    user.role,
     env.JWT_ACCESS_TOKEN_SECRET,
     "1h",
   );
 
   const data = {
-    first_name: userData.first_name,
-    last_name: userData.last_name,
-    email: userData.email,
-    role: userData.role,
+    first_name: user.first_name,
+    last_name: user.last_name,
+    email: user.email,
+    role: user.role,
     refresh_token: refreshToken,
     access_token: accessToken,
   };
@@ -210,8 +208,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
   const { email } = rawData.data;
 
-  const userData = await User.findOne({ email });
-  if (!userData) {
+  const user = await User.findOne({ email });
+  if (!user) {
     return responseHandler(
       res,
       true,
@@ -222,15 +220,15 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
   const otp = generateVerificationOTP();
 
-  userData.passwordOtpHash = await hashPassword(otp);
-  userData.passwordOtpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+  user.passwordOtpHash = await hashPassword(otp);
+  user.passwordOtpExpiry = new Date(Date.now() + 10 * 60 * 1000);
 
-  await userData.save();
+  await user.save();
 
   await sendEmail({
-    to: userData.email,
+    to: user.email,
     subject: "Reset your Stocke password",
-    html: forgotPasswordEmailTemplate(userData.first_name, otp),
+    html: forgotPasswordEmailTemplate(user.first_name, otp),
   });
 
   return responseHandler(
@@ -238,5 +236,58 @@ export const forgotPassword = async (req: Request, res: Response) => {
     true,
     HTTP_STATUS_CODE.OK,
     "If you have an account with us, check your email for instructions to reset your password",
+  );
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  const rawData = resetPasswordSchema.safeParse(req.body);
+
+  if (!rawData.success) {
+    return validationErrorHandler(res, rawData.error);
+  }
+
+  const { otp, password, email } = rawData.data;
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    return responseHandler(
+      res,
+      false,
+      HTTP_STATUS_CODE.BAD_REQUEST,
+      "Invalid or expired token",
+    );
+  }
+
+  if (!user.passwordOtpHash || hasExpired(user.passwordOtpExpiry)) {
+    return responseHandler(
+      res,
+      false,
+      HTTP_STATUS_CODE.BAD_REQUEST,
+      "Invalid or expired token",
+    );
+  }
+
+  const isOTPMatch = await comparePassword(otp, user.passwordOtpHash);
+
+  if (!isOTPMatch) {
+    return responseHandler(
+      res,
+      false,
+      HTTP_STATUS_CODE.BAD_REQUEST,
+      "Invalid or expired token",
+    );
+  }
+
+  user.password_hash = await hashPassword(password);
+  user.passwordOtpExpiry = undefined;
+  user.passwordOtpHash = undefined;
+
+  await user.save();
+
+  return responseHandler(
+    res,
+    true,
+    HTTP_STATUS_CODE.OK,
+    "Password reset successfully",
   );
 };
