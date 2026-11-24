@@ -1,5 +1,10 @@
 import { Response, Request } from "express";
-import { loginSchema, registerSchema, verifyEmailSchema } from "./auth.schema";
+import {
+  forgotPasswordSchema,
+  loginSchema,
+  registerSchema,
+  verifyEmailSchema,
+} from "./auth.schema";
 import { HTTP_STATUS_CODE } from "../../../utils/http-status-code";
 import { User } from "../../user/user.model";
 import {
@@ -14,6 +19,7 @@ import { sendEmail } from "../../../service/email.service";
 import { verificationEmailTemplate } from "../../../templates/verification-email";
 import { createToken } from "../../../utils/token";
 import env from "../../../configs/env";
+import { forgotPasswordEmailTemplate } from "../../../templates/forgot-password";
 
 export const register = async (req: Request, res: Response) => {
   const rawData = registerSchema.safeParse(req.body);
@@ -63,7 +69,7 @@ export const register = async (req: Request, res: Response) => {
     true,
     HTTP_STATUS_CODE.CREATED,
     "User Created Successfully",
-    { data: { ...data, otp } },
+    { data },
   );
 };
 
@@ -192,5 +198,45 @@ export const login = async (req: Request, res: Response) => {
     HTTP_STATUS_CODE.OK,
     "User logged in successfully",
     { data },
+  );
+};
+
+export const forgotPassword = async (req: Request, res: Response) => {
+  const rawData = forgotPasswordSchema.safeParse(req.body);
+
+  if (!rawData.success) {
+    return validationErrorHandler(res, rawData.error);
+  }
+
+  const { email } = rawData.data;
+
+  const userData = await User.findOne({ email });
+  if (!userData) {
+    return responseHandler(
+      res,
+      true,
+      HTTP_STATUS_CODE.OK,
+      "If you have an account with us, check your email for instructions to reset your password",
+    );
+  }
+
+  const otp = generateVerificationOTP();
+
+  userData.verificationOtpHash = await hashPassword(otp);
+  userData.verificationOtpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+
+  await userData.save();
+
+  await sendEmail({
+    to: userData.email,
+    subject: "Reset your Stocke password",
+    html: forgotPasswordEmailTemplate(userData.first_name, otp),
+  });
+
+  return responseHandler(
+    res,
+    true,
+    HTTP_STATUS_CODE.OK,
+    "If you have an account with us, check your email for instructions to reset your password",
   );
 };
