@@ -9,12 +9,6 @@ import {
 } from "./auth.schema";
 import { HTTP_STATUS_CODE } from "../../../utils/http-status-code";
 import { User } from "../../user/user.model";
-import {
-  comparePassword,
-  generateVerificationOTP,
-  hasExpired,
-  hashPassword,
-} from "./auth.service";
 import { responseHandler } from "../../../helpers/response-handler";
 import { validationErrorHandler } from "../../../helpers/validation";
 import { sendEmail } from "../../../service/email";
@@ -22,6 +16,9 @@ import { verificationEmailTemplate } from "../../../templates/verification-email
 import { createToken } from "../../../utils/token";
 import env from "../../../configs/env";
 import { forgotPasswordEmailTemplate } from "../../../templates/forgot-password";
+import { generateVerificationOTP } from "../../../helpers/otp-generation";
+import { comparePassword, hashPassword } from "../../../helpers/encryption";
+import { hasExpired } from "../../../helpers/date";
 
 export const register = async (req: Request, res: Response) => {
   const rawData = registerSchema.safeParse(req.body);
