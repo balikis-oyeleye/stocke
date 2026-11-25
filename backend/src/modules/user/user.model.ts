@@ -36,18 +36,18 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    verificationOtpHash: {
+    verification_otp_hash: {
       type: String,
       trim: true,
     },
-    verificationOtpExpiry: {
+    verification_otp_expiry: {
       type: Date,
     },
-    passwordOtpHash: {
+    password_otp_hash: {
       type: String,
       trim: true,
     },
-    passwordOtpExpiry: {
+    password_otp_expiry: {
       type: Date,
     },
   },

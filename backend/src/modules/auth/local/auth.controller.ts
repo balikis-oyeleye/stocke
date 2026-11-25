@@ -32,7 +32,7 @@ export const register = async (req: Request, res: Response) => {
 
   const userData = rawData.data;
 
-  let existingUser = await User.findOne({ email: userData.email });
+  const existingUser = await User.findOne({ email: userData.email });
   if (existingUser) {
     return responseHandler(
       res,
@@ -54,8 +54,8 @@ export const register = async (req: Request, res: Response) => {
   const newUser = new User({
     ...data,
     password_hash: await hashPassword(userData.password),
-    verificationOtpHash: await hashPassword(otp),
-    verificationOtpExpiry: new Date(Date.now() + 10 * 60 * 1000),
+    verification_otp_hash: await hashPassword(otp),
+    verification_otp_expiry: new Date(Date.now() + 10 * 60 * 1000),
   });
 
   await newUser.save();
@@ -103,7 +103,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
     );
   }
 
-  if (hasExpired(user.verificationOtpExpiry)) {
+  if (hasExpired(user.verification_otp_expiry)) {
     return responseHandler(
       res,
       false,
@@ -112,7 +112,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
     );
   }
 
-  const isOTPMatch = await comparePassword(otp, user.verificationOtpHash);
+  const isOTPMatch = await comparePassword(otp, user.verification_otp_hash);
 
   if (!isOTPMatch) {
     return responseHandler(
@@ -124,8 +124,8 @@ export const verifyEmail = async (req: Request, res: Response) => {
   }
 
   user.email_verified = true;
-  user.verificationOtpHash = undefined;
-  user.verificationOtpExpiry = undefined;
+  user.verification_otp_hash = undefined;
+  user.verification_otp_expiry = undefined;
 
   await user.save();
 
@@ -221,8 +221,8 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
   const otp = generateVerificationOTP();
 
-  user.passwordOtpHash = await hashPassword(otp);
-  user.passwordOtpExpiry = new Date(Date.now() + 10 * 60 * 1000);
+  user.password_otp_hash = await hashPassword(otp);
+  user.password_otp_expiry = new Date(Date.now() + 10 * 60 * 1000);
 
   await user.save();
 
@@ -259,7 +259,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     );
   }
 
-  if (!user.passwordOtpHash || hasExpired(user.passwordOtpExpiry)) {
+  if (!user.password_otp_hash || hasExpired(user.password_otp_expiry)) {
     return responseHandler(
       res,
       false,
@@ -268,7 +268,7 @@ export const resetPassword = async (req: Request, res: Response) => {
     );
   }
 
-  const isOTPMatch = await comparePassword(otp, user.passwordOtpHash);
+  const isOTPMatch = await comparePassword(otp, user.password_otp_hash);
 
   if (!isOTPMatch) {
     return responseHandler(
@@ -280,8 +280,8 @@ export const resetPassword = async (req: Request, res: Response) => {
   }
 
   user.password_hash = await hashPassword(password);
-  user.passwordOtpExpiry = undefined;
-  user.passwordOtpHash = undefined;
+  user.password_otp_expiry = undefined;
+  user.password_otp_hash = undefined;
 
   await user.save();
 
@@ -339,8 +339,8 @@ export const changePassword = async (req: Request, res: Response) => {
   const hashedNewPassword = await hashPassword(new_password);
 
   userData.password_hash = hashedNewPassword;
-  userData.passwordOtpExpiry = undefined;
-  userData.passwordOtpHash = undefined;
+  userData.password_otp_expiry = undefined;
+  userData.password_otp_hash = undefined;
   await userData.save();
 
   return responseHandler(
