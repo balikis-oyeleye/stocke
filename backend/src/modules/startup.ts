@@ -1,5 +1,5 @@
 import { Express } from "express";
-import { authRouter } from "./auth/token-based/auth.routes";
+import { authRouter } from "./auth/local/auth.routes";
 
 export const setupRoutes = (app: Express) => {
   app.use("/api/v1/auth", authRouter);
