@@ -42,3 +42,8 @@ export const resetPasswordSchema = z.object({
   password: z.string().min(8, "Password must be at least 8 characters"),
   email: z.email("Please enter a valid email address").trim().toLowerCase(),
 });
+
+export const changePasswordSchema = z.object({
+  current_password: z.string().min(8, "Password must be at least 8 characters"),
+  new_password: z.string().min(8, "Password must be at least 8 characters"),
+});

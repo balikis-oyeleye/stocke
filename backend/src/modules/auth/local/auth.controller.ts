@@ -1,5 +1,6 @@
 import { Response, Request } from "express";
 import {
+  changePasswordSchema,
   forgotPasswordSchema,
   loginSchema,
   registerSchema,
@@ -289,5 +290,63 @@ export const resetPassword = async (req: Request, res: Response) => {
     true,
     HTTP_STATUS_CODE.OK,
     "Password reset successfully",
+  );
+};
+
+export const changePassword = async (req: Request, res: Response) => {
+  const rawData = changePasswordSchema.safeParse(req.body);
+
+  if (!rawData.success) {
+    return validationErrorHandler(res, rawData.error);
+  }
+  const { current_password, new_password } = rawData.data;
+
+  const user = req?.user;
+
+  if (!user?.userId) {
+    return responseHandler(
+      res,
+      false,
+      HTTP_STATUS_CODE.UNAUTHORIZED,
+      "Authentication required. Please log in to continue.",
+    );
+  }
+
+  const userData = await User.findById(user.userId);
+  if (!userData) {
+    return responseHandler(
+      res,
+      false,
+      HTTP_STATUS_CODE.NOT_FOUND,
+      "User not found.",
+    );
+  }
+
+  const isOldPasswordValid = await comparePassword(
+    current_password,
+    userData.password_hash,
+  );
+
+  if (!isOldPasswordValid) {
+    return responseHandler(
+      res,
+      false,
+      HTTP_STATUS_CODE.BAD_REQUEST,
+      "The current password you entered is incorrect.",
+    );
+  }
+
+  const hashedNewPassword = await hashPassword(new_password);
+
+  userData.password_hash = hashedNewPassword;
+  userData.passwordOtpExpiry = undefined;
+  userData.passwordOtpHash = undefined;
+  await userData.save();
+
+  return responseHandler(
+    res,
+    true,
+    HTTP_STATUS_CODE.OK,
+    "Password changed successfully",
   );
 };
