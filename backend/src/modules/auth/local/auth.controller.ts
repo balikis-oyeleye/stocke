@@ -11,53 +11,18 @@ import { HTTP_STATUS_CODE } from "../../../utils/http-status-code";
 import { User } from "../../user/user.model";
 import { responseHandler } from "../../../helpers/response-handler";
 import { sendEmail } from "../../../service/email";
-import { verificationEmailTemplate } from "../../../templates/verification-email";
 import { generateAuthToken } from "../../../utils/token";
 import { forgotPasswordEmailTemplate } from "../../../templates/forgot-password";
-import { comparePassword, hashPassword } from "../../../utils/encryption";
+import { comparePassword } from "../../../utils/encryption";
 import type { ValidatedRequest } from "../../../types/request";
 import { generateOtp, validateOtp } from "../../../helpers/otp";
-import { updatePassword } from "./auth.service";
+import { registerUser, updatePassword } from "./auth.service";
 
 export const register = async (
   req: ValidatedRequest<typeof registerSchema>,
   res: Response,
 ) => {
-  const userData = req.body;
-
-  const existingUser = await User.findOne({ email: userData.email });
-  if (existingUser) {
-    return responseHandler(
-      res,
-      false,
-      HTTP_STATUS_CODE.CONFLICT,
-      "User already exists",
-    );
-  }
-
-  const { expiryDate, hashOtp, otp } = await generateOtp();
-
-  const data = {
-    first_name: userData.first_name,
-    last_name: userData.last_name,
-    email: userData.email,
-    role: userData.role,
-  };
-
-  const newUser = new User({
-    ...data,
-    password_hash: await hashPassword(userData.password),
-    verification_otp_hash: hashOtp,
-    verification_otp_expiry: expiryDate,
-  });
-
-  await newUser.save();
-
-  await sendEmail({
-    to: data.email,
-    subject: "Verify your Stocke email address",
-    html: verificationEmailTemplate(data.first_name, otp),
-  });
+  const data = await registerUser(req.body);
 
   return responseHandler(
     res,
