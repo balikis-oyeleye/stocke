@@ -15,10 +15,9 @@ import { verificationEmailTemplate } from "../../../templates/verification-email
 import { createToken } from "../../../utils/token";
 import env from "../../../configs/env";
 import { forgotPasswordEmailTemplate } from "../../../templates/forgot-password";
-import { generateVerificationOTP } from "../../../helpers/otp-generation";
 import { comparePassword, hashPassword } from "../../../helpers/encryption";
-import { hasExpired } from "../../../helpers/date";
 import type { ValidatedRequest } from "../../../types/request";
+import { generateOtp, validateOtp } from "../../../helpers/otp";
 
 export const register = async (
   req: ValidatedRequest<typeof registerSchema>,
@@ -36,7 +35,7 @@ export const register = async (
     );
   }
 
-  const otp = generateVerificationOTP();
+  const { expiryDate, hashOtp, otp } = await generateOtp();
 
   const data = {
     first_name: userData.first_name,
@@ -48,8 +47,8 @@ export const register = async (
   const newUser = new User({
     ...data,
     password_hash: await hashPassword(userData.password),
-    verification_otp_hash: await hashPassword(otp),
-    verification_otp_expiry: new Date(Date.now() + 10 * 60 * 1000),
+    verification_otp_hash: hashOtp,
+    verification_otp_expiry: expiryDate,
   });
 
   await newUser.save();
@@ -94,23 +93,18 @@ export const verifyEmail = async (
     );
   }
 
-  if (!user.verification_otp_hash || hasExpired(user.verification_otp_expiry)) {
+  const isValid = await validateOtp(
+    otp,
+    user.verification_otp_hash,
+    user.verification_otp_expiry,
+  );
+
+  if (!isValid) {
     return responseHandler(
       res,
       false,
       HTTP_STATUS_CODE.BAD_REQUEST,
-      "Verification code has expired",
-    );
-  }
-
-  const isOTPMatch = await comparePassword(otp, user.verification_otp_hash);
-
-  if (!isOTPMatch) {
-    return responseHandler(
-      res,
-      false,
-      HTTP_STATUS_CODE.BAD_REQUEST,
-      "Invalid verification code",
+      "Invalid or expired verification code.",
     );
   }
 
@@ -204,10 +198,10 @@ export const forgotPassword = async (
     );
   }
 
-  const otp = generateVerificationOTP();
+  const { expiryDate, hashOtp, otp } = await generateOtp();
 
-  user.password_otp_hash = await hashPassword(otp);
-  user.password_otp_expiry = new Date(Date.now() + 10 * 60 * 1000);
+  user.password_otp_hash = hashOtp;
+  user.password_otp_expiry = expiryDate;
 
   await user.save();
 
@@ -241,23 +235,18 @@ export const resetPassword = async (
     );
   }
 
-  if (!user.password_otp_hash || hasExpired(user.password_otp_expiry)) {
+  const isValid = await validateOtp(
+    otp,
+    user.password_otp_hash,
+    user.password_otp_expiry,
+  );
+
+  if (!isValid) {
     return responseHandler(
       res,
       false,
       HTTP_STATUS_CODE.BAD_REQUEST,
-      "Invalid or expired token",
-    );
-  }
-
-  const isOTPMatch = await comparePassword(otp, user.password_otp_hash);
-
-  if (!isOTPMatch) {
-    return responseHandler(
-      res,
-      false,
-      HTTP_STATUS_CODE.BAD_REQUEST,
-      "Invalid or expired token",
+      "Invalid or expired verification code.",
     );
   }
 
