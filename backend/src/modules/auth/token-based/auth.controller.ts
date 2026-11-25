@@ -16,7 +16,7 @@ import {
 } from "./auth.service";
 import { responseHandler } from "../../../helpers/response-handler";
 import { validationErrorHandler } from "../../../helpers/validation";
-import { sendEmail } from "../../../service/email.service";
+import { sendEmail } from "../../../service/email";
 import { verificationEmailTemplate } from "../../../templates/verification-email";
 import { createToken } from "../../../utils/token";
 import env from "../../../configs/env";
