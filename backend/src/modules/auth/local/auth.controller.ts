@@ -1,4 +1,4 @@
-import { Response, Request } from "express";
+import { Response } from "express";
 import {
   changePasswordSchema,
   forgotPasswordSchema,
@@ -10,7 +10,6 @@ import {
 import { HTTP_STATUS_CODE } from "../../../utils/http-status-code";
 import { User } from "../../user/user.model";
 import { responseHandler } from "../../../helpers/response-handler";
-import { validationErrorHandler } from "../../../helpers/validation";
 import { sendEmail } from "../../../service/email";
 import { verificationEmailTemplate } from "../../../templates/verification-email";
 import { createToken } from "../../../utils/token";
@@ -19,15 +18,13 @@ import { forgotPasswordEmailTemplate } from "../../../templates/forgot-password"
 import { generateVerificationOTP } from "../../../helpers/otp-generation";
 import { comparePassword, hashPassword } from "../../../helpers/encryption";
 import { hasExpired } from "../../../helpers/date";
+import type { ValidatedRequest } from "../../../types/request";
 
-export const register = async (req: Request, res: Response) => {
-  const rawData = registerSchema.safeParse(req.body);
-
-  if (!rawData.success) {
-    return validationErrorHandler(res, rawData.error);
-  }
-
-  const userData = rawData.data;
+export const register = async (
+  req: ValidatedRequest<typeof registerSchema>,
+  res: Response,
+) => {
+  const userData = req.body;
 
   const existingUser = await User.findOne({ email: userData.email });
   if (existingUser) {
@@ -72,14 +69,11 @@ export const register = async (req: Request, res: Response) => {
   );
 };
 
-export const verifyEmail = async (req: Request, res: Response) => {
-  const rawData = verifyEmailSchema.safeParse(req.body);
-
-  if (!rawData.success) {
-    return validationErrorHandler(res, rawData.error);
-  }
-
-  const { otp, email } = rawData.data;
+export const verifyEmail = async (
+  req: ValidatedRequest<typeof verifyEmailSchema>,
+  res: Response,
+) => {
+  const { otp, email } = req.body;
 
   const user = await User.findOne({ email });
   if (!user) {
@@ -134,14 +128,11 @@ export const verifyEmail = async (req: Request, res: Response) => {
   );
 };
 
-export const login = async (req: Request, res: Response) => {
-  const rawData = loginSchema.safeParse(req.body);
-
-  if (!rawData.success) {
-    return validationErrorHandler(res, rawData.error);
-  }
-
-  const { email, password } = rawData.data;
+export const login = async (
+  req: ValidatedRequest<typeof loginSchema>,
+  res: Response,
+) => {
+  const { email, password } = req.body;
 
   const user = await User.findOne({ email });
   const isPasswordValid = await comparePassword(password, user?.password_hash);
@@ -197,14 +188,11 @@ export const login = async (req: Request, res: Response) => {
   );
 };
 
-export const forgotPassword = async (req: Request, res: Response) => {
-  const rawData = forgotPasswordSchema.safeParse(req.body);
-
-  if (!rawData.success) {
-    return validationErrorHandler(res, rawData.error);
-  }
-
-  const { email } = rawData.data;
+export const forgotPassword = async (
+  req: ValidatedRequest<typeof forgotPasswordSchema>,
+  res: Response,
+) => {
+  const { email } = req.body;
 
   const user = await User.findOne({ email });
   if (!user) {
@@ -237,14 +225,11 @@ export const forgotPassword = async (req: Request, res: Response) => {
   );
 };
 
-export const resetPassword = async (req: Request, res: Response) => {
-  const rawData = resetPasswordSchema.safeParse(req.body);
-
-  if (!rawData.success) {
-    return validationErrorHandler(res, rawData.error);
-  }
-
-  const { otp, password, email } = rawData.data;
+export const resetPassword = async (
+  req: ValidatedRequest<typeof resetPasswordSchema>,
+  res: Response,
+) => {
+  const { otp, password, email } = req.body;
 
   const user = await User.findOne({ email });
   if (!user) {
@@ -290,13 +275,11 @@ export const resetPassword = async (req: Request, res: Response) => {
   );
 };
 
-export const changePassword = async (req: Request, res: Response) => {
-  const rawData = changePasswordSchema.safeParse(req.body);
-
-  if (!rawData.success) {
-    return validationErrorHandler(res, rawData.error);
-  }
-  const { current_password, new_password } = rawData.data;
+export const changePassword = async (
+  req: ValidatedRequest<typeof changePasswordSchema>,
+  res: Response,
+) => {
+  const { current_password, new_password } = req.body;
 
   const user = req?.user;
 
