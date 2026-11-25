@@ -38,7 +38,7 @@ export const register = async (req: Request, res: Response) => {
       res,
       false,
       HTTP_STATUS_CODE.CONFLICT,
-      "User already exist",
+      "User already exists",
     );
   }
 
@@ -70,7 +70,7 @@ export const register = async (req: Request, res: Response) => {
     res,
     true,
     HTTP_STATUS_CODE.CREATED,
-    "User Created Successfully",
+    "User created successfully",
     { data },
   );
 };
@@ -255,7 +255,7 @@ export const resetPassword = async (req: Request, res: Response) => {
       res,
       false,
       HTTP_STATUS_CODE.BAD_REQUEST,
-      "Invalid or expired token",
+      "	Invalid or expired verification code.",
     );
   }
 
