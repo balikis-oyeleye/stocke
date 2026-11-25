@@ -1,4 +1,4 @@
-import { hashPassword } from "../../../helpers/encryption";
+import { hashPassword } from "../../../utils/encryption";
 import { UserDocument } from "../../user/user.model";
 
 export const updatePassword = async (user: UserDocument, password: string) => {

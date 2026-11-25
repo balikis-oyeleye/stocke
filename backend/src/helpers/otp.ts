@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { comparePassword, hashPassword } from "./encryption";
+import { comparePassword, hashPassword } from "../utils/encryption";
 
 export const generateVerificationOTP = (): string => {
   return crypto.randomInt(100000, 1000000).toString();

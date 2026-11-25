@@ -14,7 +14,7 @@ import { sendEmail } from "../../../service/email";
 import { verificationEmailTemplate } from "../../../templates/verification-email";
 import { generateAuthToken } from "../../../utils/token";
 import { forgotPasswordEmailTemplate } from "../../../templates/forgot-password";
-import { comparePassword, hashPassword } from "../../../helpers/encryption";
+import { comparePassword, hashPassword } from "../../../utils/encryption";
 import type { ValidatedRequest } from "../../../types/request";
 import { generateOtp, validateOtp } from "../../../helpers/otp";
 import { updatePassword } from "./auth.service";
