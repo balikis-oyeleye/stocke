@@ -18,6 +18,7 @@ import { forgotPasswordEmailTemplate } from "../../../templates/forgot-password"
 import { comparePassword, hashPassword } from "../../../helpers/encryption";
 import type { ValidatedRequest } from "../../../types/request";
 import { generateOtp, validateOtp } from "../../../helpers/otp";
+import { updatePassword } from "./auth.service";
 
 export const register = async (
   req: ValidatedRequest<typeof registerSchema>,
@@ -250,11 +251,7 @@ export const resetPassword = async (
     );
   }
 
-  user.password_hash = await hashPassword(password);
-  user.password_otp_expiry = undefined;
-  user.password_otp_hash = undefined;
-
-  await user.save();
+  await updatePassword(user, password);
 
   return responseHandler(
     res,
@@ -305,12 +302,7 @@ export const changePassword = async (
     );
   }
 
-  const hashedNewPassword = await hashPassword(new_password);
-
-  userData.password_hash = hashedNewPassword;
-  userData.password_otp_expiry = undefined;
-  userData.password_otp_hash = undefined;
-  await userData.save();
+  await updatePassword(userData, new_password);
 
   return responseHandler(
     res,
