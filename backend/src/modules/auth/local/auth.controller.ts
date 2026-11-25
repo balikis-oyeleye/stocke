@@ -103,7 +103,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
     );
   }
 
-  if (hasExpired(user.verification_otp_expiry)) {
+  if (!user.verification_otp_hash || hasExpired(user.verification_otp_expiry)) {
     return responseHandler(
       res,
       false,
@@ -163,7 +163,7 @@ export const login = async (req: Request, res: Response) => {
       res,
       false,
       HTTP_STATUS_CODE.FORBIDDEN,
-      "Invalid email or password",
+      "Please verify your email address before logging in.",
     );
   }
 
