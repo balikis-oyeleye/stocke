@@ -1,4 +1,6 @@
 import jwt, { type JwtPayload, type SignOptions } from "jsonwebtoken";
+import env from "../configs/env";
+import { ROLE } from "../types/user";
 
 export interface TokenPayload extends JwtPayload {
   userId: string;
@@ -33,4 +35,23 @@ export const verifyToken = (token: string, secret: string): TokenPayload => {
   }
 
   return decoded as TokenPayload;
+};
+
+export const generateAuthToken = (id: string, email: string, role: ROLE) => {
+  const refreshToken = createToken(
+    id,
+    email,
+    role,
+    env.JWT_REFRESH_TOKEN_SECRET,
+    "7d",
+  );
+  const accessToken = createToken(
+    id,
+    email,
+    role,
+    env.JWT_ACCESS_TOKEN_SECRET,
+    "1h",
+  );
+
+  return { accessToken, refreshToken };
 };

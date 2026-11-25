@@ -12,8 +12,7 @@ import { User } from "../../user/user.model";
 import { responseHandler } from "../../../helpers/response-handler";
 import { sendEmail } from "../../../service/email";
 import { verificationEmailTemplate } from "../../../templates/verification-email";
-import { createToken } from "../../../utils/token";
-import env from "../../../configs/env";
+import { generateAuthToken } from "../../../utils/token";
 import { forgotPasswordEmailTemplate } from "../../../templates/forgot-password";
 import { comparePassword, hashPassword } from "../../../helpers/encryption";
 import type { ValidatedRequest } from "../../../types/request";
@@ -150,19 +149,10 @@ export const login = async (
     );
   }
 
-  const refreshToken = createToken(
+  const { accessToken, refreshToken } = generateAuthToken(
     user._id.toString(),
     user.email,
     user.role,
-    env.JWT_REFRESH_TOKEN_SECRET,
-    "7d",
-  );
-  const accessToken = createToken(
-    user._id.toString(),
-    user.email,
-    user.role,
-    env.JWT_ACCESS_TOKEN_SECRET,
-    "1h",
   );
 
   const data = {
