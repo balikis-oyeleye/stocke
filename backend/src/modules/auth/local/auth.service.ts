@@ -7,6 +7,10 @@ import type { z } from "zod";
 import type { registerSchema, verifyEmailSchema } from "./auth.schema";
 import { AppError } from "../../../utils/error";
 import { HTTP_STATUS_CODE } from "../../../utils/http-status-code";
+import {
+  ensureUserDoesNotExist,
+  ensureUserExists,
+} from "../../../helpers/user";
 
 export const registerUserService = async (
   userData: z.infer<typeof registerSchema>,
@@ -79,35 +83,4 @@ export const updatePassword = async (user: UserDocument, password: string) => {
   user.password_otp_expiry = undefined;
   user.password_otp_hash = undefined;
   await user.save();
-};
-
-export const ensureUserDoesNotExist = async (email: string) => {
-  const existingUser = await User.findOne({
-    email,
-  });
-
-  if (existingUser) {
-    throw new AppError("User already exists", HTTP_STATUS_CODE.CONFLICT);
-  }
-};
-
-interface Payload {
-  message?: string;
-  statusCode?: number;
-}
-
-export const ensureUserExists = async (
-  email: string,
-  { message, statusCode }: Payload = {},
-) => {
-  const user = await User.findOne({ email });
-
-  if (!user) {
-    throw new AppError(
-      message ?? "User not found.",
-      statusCode ?? HTTP_STATUS_CODE.NOT_FOUND,
-    );
-  }
-
-  return user;
 };
