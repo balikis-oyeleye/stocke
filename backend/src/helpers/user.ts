@@ -17,11 +17,27 @@ export const ensureUserDoesNotExist = async (email: string) => {
   }
 };
 
-export const ensureUserExists = async (
+export const ensureUserExistsByEmail = async (
   email: string,
   { message, statusCode }: Payload = {},
 ) => {
   const user = await User.findOne({ email });
+
+  if (!user) {
+    throw new AppError(
+      message ?? "User not found.",
+      statusCode ?? HTTP_STATUS_CODE.NOT_FOUND,
+    );
+  }
+
+  return user;
+};
+
+export const ensureUserExistsById = async (
+  id: string,
+  { message, statusCode }: Payload = {},
+) => {
+  const user = await User.findById(id);
 
   if (!user) {
     throw new AppError(
