@@ -23,22 +23,22 @@ import {
 } from "../../../helpers/user";
 
 export const registerUserService = async (
-  userData: z.infer<typeof registerSchema>,
+  payload: z.infer<typeof registerSchema>,
 ) => {
-  await ensureUserDoesNotExist(userData.email);
+  await ensureUserDoesNotExist(payload.email);
 
   const { expiryDate, hashOtp, otp } = await generateOtp();
 
   const data = {
-    first_name: userData.first_name,
-    last_name: userData.last_name,
-    email: userData.email,
-    role: userData.role,
+    first_name: payload.first_name,
+    last_name: payload.last_name,
+    email: payload.email,
+    role: payload.role,
   };
 
   const newUser = new User({
     ...data,
-    password_hash: await hashPassword(userData.password),
+    password_hash: await hashPassword(payload.password),
     verification_otp_hash: hashOtp,
     verification_otp_expiry: expiryDate,
   });
@@ -151,7 +151,7 @@ export const resetPasswordService = async (
 ) => {
   const user = await ensureUserExistsByEmail(payload.email, {
     statusCode: HTTP_STATUS_CODE.BAD_REQUEST,
-    message: "\tInvalid or expired verification code.",
+    message: "Invalid or expired verification code.",
   });
 
   const isValid = await validateOtp(

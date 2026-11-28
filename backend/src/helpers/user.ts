@@ -2,7 +2,7 @@ import { User } from "../modules/user/user.model";
 import { AppError } from "../utils/error";
 import { HTTP_STATUS_CODE } from "../utils/http-status-code";
 
-interface Payload {
+interface EnsureUserExistsOptions {
   message?: string;
   statusCode?: number;
 }
@@ -19,7 +19,7 @@ export const ensureUserDoesNotExist = async (email: string) => {
 
 export const ensureUserExistsByEmail = async (
   email: string,
-  { message, statusCode }: Payload = {},
+  { message, statusCode }: EnsureUserExistsOptions = {},
 ) => {
   const user = await User.findOne({ email });
 
@@ -35,7 +35,7 @@ export const ensureUserExistsByEmail = async (
 
 export const ensureUserExistsById = async (
   id: string,
-  { message, statusCode }: Payload = {},
+  { message, statusCode }: EnsureUserExistsOptions = {},
 ) => {
   const user = await User.findById(id);
 
