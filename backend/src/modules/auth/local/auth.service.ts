@@ -129,18 +129,8 @@ export const loginService = async (payload: z.infer<typeof loginSchema>) => {
 export const forgotPasswordService = async (
   payload: z.infer<typeof forgotPasswordSchema>,
 ) => {
-  let user: UserDocument;
-  try {
-    user = await ensureUserExistsByEmail(payload.email);
-  } catch (error) {
-    if (
-      error instanceof AppError &&
-      error.statusCode === HTTP_STATUS_CODE.NOT_FOUND
-    ) {
-      return;
-    }
-    throw error;
-  }
+  const user = await User.findOne({ email: payload.email });
+  if (!user) return;
 
   const { expiryDate, hashOtp, otp } = await generateOtp();
 
