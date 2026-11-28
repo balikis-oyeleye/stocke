@@ -1,5 +1,4 @@
-import mongoose, { InferSchemaType } from "mongoose";
-import { HydratedDocument } from "mongoose";
+import mongoose, { InferSchemaType, HydratedDocument } from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {

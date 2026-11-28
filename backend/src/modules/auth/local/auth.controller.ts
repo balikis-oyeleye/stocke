@@ -16,13 +16,17 @@ import { forgotPasswordEmailTemplate } from "../../../templates/forgot-password"
 import { comparePassword } from "../../../utils/encryption";
 import type { ValidatedRequest } from "../../../types/request";
 import { generateOtp, validateOtp } from "../../../helpers/otp";
-import { registerUser, updatePassword } from "./auth.service";
+import {
+  registerUserService,
+  updatePassword,
+  verifyEmailService,
+} from "./auth.service";
 
 export const register = async (
   req: ValidatedRequest<typeof registerSchema>,
   res: Response,
 ) => {
-  const data = await registerUser(req.body);
+  const data = await registerUserService(req.body);
 
   return responseHandler(
     res,
@@ -37,47 +41,7 @@ export const verifyEmail = async (
   req: ValidatedRequest<typeof verifyEmailSchema>,
   res: Response,
 ) => {
-  const { otp, email } = req.body;
-
-  const user = await User.findOne({ email });
-  if (!user) {
-    return responseHandler(
-      res,
-      false,
-      HTTP_STATUS_CODE.BAD_REQUEST,
-      "Invalid or expired verification code",
-    );
-  }
-
-  if (user.email_verified) {
-    return responseHandler(
-      res,
-      false,
-      HTTP_STATUS_CODE.BAD_REQUEST,
-      "Email already verified",
-    );
-  }
-
-  const isValid = await validateOtp(
-    otp,
-    user.verification_otp_hash,
-    user.verification_otp_expiry,
-  );
-
-  if (!isValid) {
-    return responseHandler(
-      res,
-      false,
-      HTTP_STATUS_CODE.BAD_REQUEST,
-      "Invalid or expired verification code.",
-    );
-  }
-
-  user.email_verified = true;
-  user.verification_otp_hash = undefined;
-  user.verification_otp_expiry = undefined;
-
-  await user.save();
+  await verifyEmailService(req.body);
 
   return responseHandler(
     res,
